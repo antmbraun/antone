@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct ContrastSectionsApp: App {
+struct AntoneApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
