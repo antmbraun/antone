@@ -67,7 +67,7 @@ class GameManager: ObservableObject {
     }
 
     func playHint() {
-        guard gameState == .waitingForInput, useSoundOnly else { return }
+        guard gameState == .waitingForInput else { return }
         hintTask?.cancel()
         hintTask = Task {
             await playRangeHint()
@@ -78,27 +78,39 @@ class GameManager: ObservableObject {
         guard !frequencies.isEmpty else { return }
         isPlayingHint = true
 
-        let lowestIndex = 0
-        let highestIndex = frequencies.count - 1
-
-        // Play lowest key 3 times
-        for _ in 0..<3 {
+        // Play each key sequentially from lowest to highest
+        for index in 0..<frequencies.count {
             guard !Task.isCancelled else { break }
-            highlightedKey = lowestIndex
+            if !useSoundOnly {
+                highlightedKey = index
+            }
             await toneGenerator.playToneAndWait(
-                frequency: frequencies[lowestIndex], duration: 0.25)
+                frequency: frequencies[index], duration: 0.25)
             highlightedKey = nil
-            try? await Task.sleep(nanoseconds: 150_000_000)
+            try? await Task.sleep(nanoseconds: 100_000_000)
         }
 
-        // Play highest key 3 times
-        for _ in 0..<3 {
-            guard !Task.isCancelled else { break }
-            highlightedKey = highestIndex
-            await toneGenerator.playToneAndWait(
-                frequency: frequencies[highestIndex], duration: 0.25)
+        guard !Task.isCancelled else {
             highlightedKey = nil
-            try? await Task.sleep(nanoseconds: 150_000_000)
+            isPlayingHint = false
+            return
+        }
+
+        // Pause, then replay the most recent tone in the sequence
+        try? await Task.sleep(nanoseconds: 400_000_000)
+
+        if let lastKey = sequence.last, lastKey < frequencies.count {
+            guard !Task.isCancelled else {
+                highlightedKey = nil
+                isPlayingHint = false
+                return
+            }
+            if !useSoundOnly {
+                highlightedKey = lastKey
+            }
+            await toneGenerator.playToneAndWait(
+                frequency: frequencies[lastKey], duration: 0.4)
+            highlightedKey = nil
         }
 
         highlightedKey = nil
@@ -108,16 +120,23 @@ class GameManager: ObservableObject {
     func handleTap(keyIndex: Int) {
         guard gameState == .waitingForInput else { return }
 
-        // Play the tapped tone so the player hears feedback
+        // Flash the key and play the tapped tone
+        highlightedKey = keyIndex
         if keyIndex < frequencies.count {
             toneGenerator.playTone(frequency: frequencies[keyIndex])
+        }
+        Task {
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            if highlightedKey == keyIndex {
+                highlightedKey = nil
+            }
         }
 
         if keyIndex == sequence[playerIndex] {
             playerIndex += 1
             if playerIndex >= sequence.count {
-                // Full sequence matched
-                score += 1
+                // Full sequence matched — increment score by the number of keys in the keyboard. That way you get rewarded for more difficulty.
+                score += keyCount
                 appendAndPlay()
             }
         } else {

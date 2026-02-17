@@ -59,7 +59,7 @@ struct ContentView: View {
     }
 
     private func isHighlighted(_ keyIndex: Int) -> Bool {
-        !useSoundOnly && gameManager.highlightedKey == keyIndex
+        gameManager.highlightedKey == keyIndex
     }
 
     private func keyColor(base: Color, keyIndex: Int) -> Color {
@@ -223,6 +223,7 @@ struct ContentView: View {
 
             // Play button
             Button(action: {
+                startingKeyHue = Double.random(in: 0...1)
                 gameManager.startGame(
                     frequencies: frequencies,
                     keyCount: keyCount,
@@ -290,19 +291,17 @@ struct ContentView: View {
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
 
-                    if useSoundOnly {
-                        Button(action: {
-                            gameManager.playHint()
-                        }) {
-                            Image(systemName: "ear")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(
-                                    gameManager.isPlayingHint
-                                        ? .yellow : .white.opacity(0.8)
-                                )
-                        }
-                        .disabled(gameManager.isPlayingHint)
+                    Button(action: {
+                        gameManager.playHint()
+                    }) {
+                        Image(systemName: "ear")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(
+                                gameManager.isPlayingHint
+                                    ? .yellow : .white.opacity(0.8)
+                            )
                     }
+                    .disabled(gameManager.isPlayingHint)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
@@ -345,6 +344,7 @@ struct ContentView: View {
 
             HStack(spacing: 20) {
                 Button(action: {
+                    startingKeyHue = Double.random(in: 0...1)
                     gameManager.startGame(
                         frequencies: frequencies,
                         keyCount: keyCount,
