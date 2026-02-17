@@ -62,9 +62,13 @@ struct ContentView: View {
         gameManager.highlightedKey == keyIndex
     }
 
+    private var highlightColor: Color {
+        useColors ? Color.white : Color.yellow
+    }
+
     private func keyColor(base: Color, keyIndex: Int) -> Color {
         if isHighlighted(keyIndex) {
-            return Color.white
+            return highlightColor
         }
         return useColors ? base : Color.white
     }
@@ -142,7 +146,7 @@ struct ContentView: View {
                     .frame(width: whiteKeyWidth, height: containerHeight)
                     .overlay(
                         isHighlighted(colorIndex)
-                            ? Color.white.opacity(0.5) : Color.clear
+                            ? highlightColor.opacity(0.5) : Color.clear
                     )
                     .animation(.easeInOut(duration: 0.1), value: gameManager.highlightedKey)
                     .onTapGesture { handleKeyTap(colorIndex) }
@@ -159,7 +163,7 @@ struct ContentView: View {
                 whiteKeyIndices.firstIndex(of: precedingWhiteKeyIndex) ?? 0
             let xPosition = CGFloat(whiteKeyArrayIndex) * whiteKeyWidth + whiteKeyWidth
 
-            (isHighlighted(blackKeyIndex) ? Color.white : Color.black)
+            (isHighlighted(blackKeyIndex) ? highlightColor : Color.black)
                 .frame(width: blackKeyWidth, height: blackKeyHeight)
                 .animation(.easeInOut(duration: 0.1), value: gameManager.highlightedKey)
                 .position(x: xPosition, y: blackKeyHeight / 2)
@@ -180,7 +184,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .overlay(
                         isHighlighted(index)
-                            ? Color.white.opacity(0.5) : Color.clear
+                            ? highlightColor.opacity(0.5) : Color.clear
                     )
                     .animation(.easeInOut(duration: 0.1), value: gameManager.highlightedKey)
                     .onTapGesture { handleKeyTap(index) }
